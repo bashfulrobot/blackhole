@@ -52,9 +52,10 @@ teardown:
     # Destroy the cluster
     gum log --level info "Destroying infrastructure..."
     tofu destroy -auto-approve
-    # Clean up kubeconfig file
-    gum log --level info "Removing kubeconfig..."
+    # Clean up kubeconfig and GCP cache files
+    gum log --level info "Removing kubeconfig and GCP cache files..."
     rm -f ~/.kube/clusters/LAB_NAME-kubeconfig.yaml
+    rm -rf ~/.kube/clusters/gke_gcloud_auth_plugin_cache
     gum log --level info "Teardown complete."
 
 # Get kubeconfig for this cluster
