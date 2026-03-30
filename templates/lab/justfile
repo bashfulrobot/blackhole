@@ -1,0 +1,26 @@
+# List available recipes
+default:
+    @just --list
+
+# Initialize and apply (full setup)
+up: init apply kubeconfig
+
+# Initialize OpenTofu
+init:
+    tofu init
+
+# Plan changes
+plan:
+    tofu plan
+
+# Apply changes
+apply:
+    tofu apply
+
+# Destroy infrastructure
+destroy:
+    tofu destroy
+
+# Get kubeconfig for this cluster
+kubeconfig:
+    gcloud container clusters get-credentials LAB_NAME --zone $(tofu output -raw zone) --project $GCP_PROJECT
