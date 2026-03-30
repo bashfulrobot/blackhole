@@ -1,0 +1,12 @@
+# devenv
+.devenv/
+.devenv.flake.nix
+
+# OpenTofu
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+
+# 1Password
+.env
