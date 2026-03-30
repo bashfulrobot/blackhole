@@ -1,9 +1,3 @@
-# Nix
-result
-
-# direnv
-.direnv/
-
 # OpenTofu
 .terraform/
 *.tfstate
