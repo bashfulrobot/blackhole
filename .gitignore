@@ -1,6 +1,8 @@
-# devenv
-.devenv/
-.devenv.flake.nix
+# Nix
+result
+
+# direnv
+.direnv/
 
 # OpenTofu
 .terraform/
