@@ -10,3 +10,6 @@
 
 # 1Password
 .env
+
+# Claude
+.claude/
