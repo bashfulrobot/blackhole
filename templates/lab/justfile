@@ -7,7 +7,8 @@ up: init apply kubeconfig
 
 # Initialize OpenTofu
 init:
-    tofu init
+    gum spin --title "Initializing OpenTofu..." -- tofu init
+    gum log --level info "OpenTofu initialized."
 
 # Plan changes
 plan:
@@ -15,11 +16,45 @@ plan:
 
 # Apply changes
 apply:
-    tofu apply
+    gum confirm "Apply infrastructure changes?" && tofu apply -auto-approve || true
 
-# Destroy infrastructure
+# Destroy infrastructure (use teardown instead for full cleanup)
 destroy:
-    tofu destroy
+    gum confirm "Destroy infrastructure?" && tofu destroy -auto-approve || true
+
+# Full teardown: clean up GKE-created resources, destroy infra, remove kubeconfig
+teardown:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    gum confirm "Teardown LAB_NAME? This will destroy ALL resources." || exit 0
+    CLUSTER="LAB_NAME"
+    ZONE=$(tofu output -raw zone 2>/dev/null || echo "")
+    if [ -z "$ZONE" ]; then
+      gum log --level error "No tofu state found. Run 'just destroy' manually if needed."
+      exit 1
+    fi
+    # Ensure kubeconfig is set
+    gum spin --title "Fetching kubeconfig..." -- \
+      gcloud container clusters get-credentials "$CLUSTER" --zone "$ZONE" --project "$TF_VAR_project_id"
+    # Delete LoadBalancer services (releases external IPs and forwarding rules)
+    gum log --level info "Deleting LoadBalancer services..."
+    kubectl delete svc --all-namespaces -l '!kubernetes.io/name' --field-selector spec.type=LoadBalancer --ignore-not-found
+    # Delete Ingresses (releases GCP load balancers)
+    gum log --level info "Deleting Ingresses..."
+    kubectl delete ingress --all-namespaces --all --ignore-not-found
+    # Delete PVCs (releases persistent disks)
+    gum log --level info "Deleting PVCs..."
+    kubectl delete pvc --all-namespaces --all --ignore-not-found
+    # Wait for GCP to reconcile resource deletion
+    gum spin --title "Waiting for GCP to clean up resources (60s)..." -- sleep 60
+    # Destroy the cluster
+    gum log --level info "Destroying infrastructure..."
+    tofu destroy -auto-approve
+    # Clean up kubeconfig context
+    gum log --level info "Removing kubeconfig context..."
+    kubectl config delete-context "gke_${TF_VAR_project_id}_${ZONE}_${CLUSTER}" 2>/dev/null || true
+    kubectl config delete-cluster "gke_${TF_VAR_project_id}_${ZONE}_${CLUSTER}" 2>/dev/null || true
+    gum log --level info "Teardown complete."
 
 # Get kubeconfig for this cluster
 kubeconfig:

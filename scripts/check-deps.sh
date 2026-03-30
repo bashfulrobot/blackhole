@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-required=(op tofu kubectl helm gcloud just)
+required=(op tofu kubectl helm gcloud just gum)
 missing=()
 
 for cmd in "${required[@]}"; do
