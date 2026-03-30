@@ -2,6 +2,10 @@
 default:
     @just --list
 
+# Check that all required tools are installed
+check-deps:
+    @./scripts/check-deps.sh
+
 # Scaffold a new lab (e.g., just new-lab my-experiment)
 new-lab name:
     @if [ -d "labs/{{name}}" ]; then echo "Lab '{{name}}' already exists"; exit 1; fi
@@ -12,5 +16,5 @@ new-lab name:
 # Authenticate with GCP
 gcp-auth:
     gcloud auth login
-    gcloud config set project $GCP_PROJECT
-    gcloud config set compute/region $GCP_PRIMARY_REGION
+    gcloud config set project $TF_VAR_project_id
+    gcloud config set compute/region $TF_VAR_region

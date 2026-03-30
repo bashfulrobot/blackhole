@@ -23,4 +23,4 @@ destroy:
 
 # Get kubeconfig for this cluster
 kubeconfig:
-    gcloud container clusters get-credentials LAB_NAME --zone $(tofu output -raw zone) --project $GCP_PROJECT
+    gcloud container clusters get-credentials LAB_NAME --zone $(tofu output -raw zone) --project $TF_VAR_project_id
