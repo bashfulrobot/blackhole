@@ -34,8 +34,10 @@ teardown:
       exit 1
     fi
     # Ensure kubeconfig is set
-    gum spin --title "Fetching kubeconfig..." -- \
+    KUBECONFIG=~/.kube/clusters/LAB_NAME-kubeconfig.yaml \
+      gum spin --title "Fetching kubeconfig..." -- \
       gcloud container clusters get-credentials "$CLUSTER" --zone "$ZONE" --project "$TF_VAR_project_id"
+    export KUBECONFIG=~/.kube/clusters/LAB_NAME-kubeconfig.yaml
     # Delete LoadBalancer services (releases external IPs and forwarding rules)
     gum log --level info "Deleting LoadBalancer services..."
     kubectl delete svc --all-namespaces -l '!kubernetes.io/name' --field-selector spec.type=LoadBalancer --ignore-not-found
@@ -50,12 +52,13 @@ teardown:
     # Destroy the cluster
     gum log --level info "Destroying infrastructure..."
     tofu destroy -auto-approve
-    # Clean up kubeconfig context
-    gum log --level info "Removing kubeconfig context..."
-    kubectl config delete-context "gke_${TF_VAR_project_id}_${ZONE}_${CLUSTER}" 2>/dev/null || true
-    kubectl config delete-cluster "gke_${TF_VAR_project_id}_${ZONE}_${CLUSTER}" 2>/dev/null || true
+    # Clean up kubeconfig file
+    gum log --level info "Removing kubeconfig..."
+    rm -f ~/.kube/clusters/LAB_NAME-kubeconfig.yaml
     gum log --level info "Teardown complete."
 
 # Get kubeconfig for this cluster
 kubeconfig:
-    gcloud container clusters get-credentials LAB_NAME --zone $(tofu output -raw zone) --project $TF_VAR_project_id
+    KUBECONFIG=~/.kube/clusters/LAB_NAME-kubeconfig.yaml \
+      gcloud container clusters get-credentials LAB_NAME --zone $(tofu output -raw zone) --project $TF_VAR_project_id
+    gum log --level info "Kubeconfig written to ~/.kube/clusters/LAB_NAME-kubeconfig.yaml"
